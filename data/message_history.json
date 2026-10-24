@@ -1,0 +1,12 @@
+[
+  {
+    "time": "2026-07-10 19:50:53",
+    "direction": "TX",
+    "plain_text": "Test msg",
+    "morse_code": "- . ... -",
+    "encrypted_data": "doHyL6azC/2F2hoczbDGTA==:tAYdN63emkrWbDtc1lefOKxga7LVhqLdqhSCF79NBCc=",
+    "sender": "LOCAL",
+    "receiver": "ESP32",
+    "encryption_status": "AES-256 CBC"
+  }
+]

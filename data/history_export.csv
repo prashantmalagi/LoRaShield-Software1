@@ -1,0 +1,2 @@
+time,direction,plain_text,morse_code,encrypted_data,sender,receiver,encryption_status
+2026-07-10 19:50:53,TX,Test msg,- . ... -,doHyL6azC/2F2hoczbDGTA==:tAYdN63emkrWbDtc1lefOKxga7LVhqLdqhSCF79NBCc=,LOCAL,ESP32,AES-256 CBC
