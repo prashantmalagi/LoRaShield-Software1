@@ -1,0 +1,177 @@
+{
+  "spec_version": "morse-seq2seq-data-v1",
+  "planned_settings": {
+    "root_seed": 73192741,
+    "partition_seed_offsets": {
+      "train": 11,
+      "validation": 101,
+      "calibration": 202,
+      "locked_test": 303
+    },
+    "planned_partition_source_counts": {
+      "train": 5000,
+      "validation": 600,
+      "calibration": 500,
+      "locked_test": 1000
+    },
+    "token_vocabulary_ids": {
+      "<PAD>": 0,
+      "<UNK>": 1,
+      "<BOS>": 2,
+      "<EOS>": 3,
+      "<DOT>": 4,
+      "<DASH>": 5,
+      "<LETTER>": 6,
+      "<WORD>": 7
+    },
+    "maximum_sequence_tokens_including_bos_eos": 256,
+    "corruption_settings": {
+      "kinds": [
+        "clean",
+        "dot_dash_substitution_05",
+        "dot_dash_substitution_10",
+        "dot_dash_substitution_15",
+        "dot_dash_substitution_20",
+        "symbol_insertion",
+        "symbol_deletion",
+        "burst_substitution",
+        "letter_boundary_insertion",
+        "letter_boundary_deletion",
+        "letter_boundary_shift",
+        "word_boundary_insertion",
+        "word_boundary_deletion",
+        "word_boundary_shift"
+      ],
+      "substitution_percentages": [5, 10, 15, 20],
+      "symbol_insertion": "one dot or dash inserted within one Morse letter group",
+      "symbol_deletion": "one dot/dash removed only when the letter group remains nonempty",
+      "burst_substitution": "2-3 contiguous dot/dash flips within one letter group",
+      "letter_boundary": ["insert", "delete", "shift by one symbol"],
+      "word_boundary": ["insert", "delete", "shift by one whole letter group"],
+      "pair_rule": "corrupted received Morse is input; canonical source Morse is target",
+      "source_rng": "random.Random(root_seed + partition_seed_offsets[partition])",
+      "pair_rng": "random.Random(pair_seed); pair_seed = corpus_seed + partition_index*1000003 + source_index*10007 + corruption_index*1009"
+    }
+  },
+  "exclusion_audit": {
+    "source_corpus_definitions": [
+      {
+        "name": "V3 train/validation/test and legacy V2 sources",
+        "seeds": [731941, 562813, 20261029, 999],
+        "counts": {
+          "train": 5000,
+          "validation": 600,
+          "v3_test": 200,
+          "v2_eval": 200,
+          "smoke_train": 40,
+          "smoke_validation": 12,
+          "smoke_test": 24
+        }
+      },
+      {
+        "name": "V3 synthetic evaluator",
+        "seeds": [8631052],
+        "counts": {"source_messages": 200}
+      },
+      {
+        "name": "V3 independent evaluator",
+        "seeds": [20261029141537],
+        "counts": {"source_messages": 500}
+      },
+      {
+        "name": "V3 corruption evaluator",
+        "seeds": [2748193],
+        "counts": {"source_messages": 100}
+      },
+      {
+        "name": "V3 selective calibration and locked test",
+        "seeds": [4819207],
+        "counts": {"calibration_sources": 300, "locked_test_sources": 300}
+      }
+    ],
+    "measured": {
+      "source_rows_across_corpora": null,
+      "unique_message_count": null,
+      "unique_word_count": null,
+      "per_corpus": {
+        "v3_and_legacy_train_eval_sources": {
+          "source_rows": null,
+          "unique_message_count": null,
+          "unique_word_count": null,
+          "source_fingerprint_sha256": null
+        },
+        "v3_synthetic_eval": {
+          "source_rows": null,
+          "unique_message_count": null,
+          "unique_word_count": null,
+          "source_fingerprint_sha256": null
+        },
+        "v3_independent_eval": {
+          "source_rows": null,
+          "unique_message_count": null,
+          "unique_word_count": null,
+          "source_fingerprint_sha256": null
+        },
+        "v3_corruption_eval": {
+          "source_rows": null,
+          "unique_message_count": null,
+          "unique_word_count": null,
+          "source_fingerprint_sha256": null
+        },
+        "v3_selective_calibration": {
+          "source_rows": null,
+          "unique_message_count": null,
+          "unique_word_count": null,
+          "source_fingerprint_sha256": null
+        },
+        "v3_selective_locked_test": {
+          "source_rows": null,
+          "unique_message_count": null,
+          "unique_word_count": null,
+          "source_fingerprint_sha256": null
+        }
+      }
+    }
+  },
+  "partition_audit": {
+    "measurement_scope": "not_computed",
+    "source_counts": {
+      "train": null,
+      "validation": null,
+      "calibration": null,
+      "locked_test": null
+    },
+    "source_fingerprints_sha256": {
+      "train": null,
+      "validation": null,
+      "calibration": null,
+      "locked_test": null
+    },
+    "overlap_check": {
+      "method": "uppercase canonical complete-message equality plus exact constituent-word set intersection; apply across exclusions and every assigned partition",
+      "results": {
+        "complete_message_overlap_count": null,
+        "word_overlap_count": null,
+        "cross_partition_message_collision_count": null,
+        "cross_partition_word_collision_count": null,
+        "complete_message_overlaps": null,
+        "word_overlaps": null,
+        "partition_message_collisions": null,
+        "partition_word_collisions": null
+      }
+    }
+  },
+  "reproducibility_policy": {
+    "regenerate_ledgers_when": [
+      "source seeds change",
+      "generator logic changes",
+      "corpus sizes change"
+    ],
+    "fingerprints_are_measured_only": true
+  },
+  "runtime_contract": {
+    "preprocessor_parameters": ["received_morse", "max_tokens"],
+    "runtime_input_fields": ["received_morse", "input_ids"],
+    "reference_labels_available_at_runtime": false
+  }
+}

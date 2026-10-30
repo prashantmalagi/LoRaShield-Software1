@@ -45,6 +45,40 @@ from utils.morse_correction import (
     _DEFAULT_THRESHOLD as CORRECTION_DEFAULT_THRESHOLD,
 )
 
+# ── V2 ML Morse Error Correction ──────────────────────────────────────────────
+# Loaded once at startup.  Disabled by default; enable via
+# LORASHIELD_ML_CORRECTION=1 environment variable or the
+# POST /api/ml/correction-status endpoint.
+try:
+    from correction.morse_corrector import MorseCorrector, CorrectionResult
+    _ml_corrector: MorseCorrector | None = MorseCorrector()
+    log.info(
+        "[ML] MorseCorrector initialised. status=%s",
+        _ml_corrector.status(),
+    )
+except Exception as _ml_load_exc:
+    _ml_corrector = None
+    log.error("[ML] Failed to initialise MorseCorrector: %s", _ml_load_exc)
+
+
+def _is_morse_payload(payload: str) -> bool:
+    """
+    Heuristic: decide if *payload* looks like a raw Morse string
+    (only contains '.', '-', ' ', '/', and is NOT AES ciphertext).
+
+    AES ciphertext produced by encrypt_message() always contains ':'.
+    Raw Morse never does.
+    """
+    if not payload:
+        return False
+    # AES ciphertext format: <base64-IV>:<base64-CT>  (always has ':')
+    if ":" in payload:
+        return False
+    # Valid Morse chars: dot, dash, space, word-sep slash
+    allowed = set(".- /")
+    return all(ch in allowed for ch in payload.strip())
+
+
 # ── App setup ─────────────────────────────────────────────────────────────────
 app = FastAPI(title="LoRaShield API", version="1.0.0")
 
@@ -133,16 +167,51 @@ def _serial_rx_callback(data: str):
 
     key = _app_state.get("enc_key", "")
     if key and ":" in payload:
+        # ── AES-encrypted payload: decrypt first ──────────────────────────
+        # IMPORTANT: Do NOT pass AES ciphertext to the Morse corrector.
+        # The corrector operates on Morse symbols only, not on base64/binary.
         plaintext, err = decrypt_message(payload, key)
         if err:
             rx_payload = {"type": "rx", "cipher": payload, "plain": payload,
-                          "enc_status": "Decrypt Error", "crc_status": crc_status}
+                          "enc_status": "Decrypt Error", "crc_status": crc_status,
+                          "ml_correction": None}
         else:
             rx_payload = {"type": "rx", "cipher": payload, "plain": plaintext,
-                          "enc_status": "AES-256 CBC", "crc_status": crc_status}
+                          "enc_status": "AES-256 CBC", "crc_status": crc_status,
+                          "ml_correction": None}
     else:
-        rx_payload = {"type": "rx", "cipher": "", "plain": payload,
-                      "enc_status": "None", "crc_status": crc_status}
+        # ── Unencrypted payload: may be raw Morse ─────────────────────────
+        ml_info = None
+        corrected_payload = payload
+
+        if _ml_corrector is not None and _ml_corrector.is_enabled and _is_morse_payload(payload):
+            try:
+                result = _ml_corrector.correct(payload)
+                ml_info = {
+                    "was_corrected": result.was_corrected,
+                    "elapsed_ms": round(result.elapsed_ms, 1),
+                    "error": result.error,
+                    "note": (
+                        "ML correction is probabilistic and may introduce errors."
+                    ),
+                }
+                # Only use corrected output when no error occurred
+                if result.error is None:
+                    corrected_payload = result.corrected_morse
+                    log.info(
+                        "[ML] RX Morse correction applied. changed=%s  elapsed_ms=%.1f",
+                        result.was_corrected, result.elapsed_ms,
+                    )
+            except ValueError as ve:
+                # Input too long; log and continue with original
+                log.warning("[ML] Skipped correction (input too long): %s", ve)
+                ml_info = {"was_corrected": False, "error": str(ve)}
+            except Exception:
+                log.exception("[ML] Unexpected error during RX correction.")
+
+        rx_payload = {"type": "rx", "cipher": "", "plain": corrected_payload,
+                      "enc_status": "None", "crc_status": crc_status,
+                      "ml_correction": ml_info}
 
     # Schedule the coroutine-based broadcast safely from the serial thread.
     _broadcast_from_thread(rx_payload)
@@ -466,6 +535,115 @@ def ai_status():
     return {
         "loaded": is_model_loaded(),
         **get_model_info(),
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ML Morse Error Correction Endpoints  (V2 denoising model)
+# ─────────────────────────────────────────────────────────────────────────────
+# These endpoints expose the V2 Keras model that corrects Morse-level
+# dot/dash substitution errors.  They are completely separate from the
+# AI Morse decoder (utils/ai.py), which translates Morse to text.
+#
+# The V2 model operates on Morse symbol sequences only.  Do NOT send
+# AES ciphertext or plain text to these endpoints.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class MLCorrectRequest(BaseModel):
+    morse: str
+
+
+class MLCorrectionToggleRequest(BaseModel):
+    enabled: bool
+
+
+@app.post("/api/ml/correct-morse")
+def ml_correct_morse(req: MLCorrectRequest):
+    """
+    Apply the V2 ML denoising model to a Morse symbol string.
+
+    The model corrects dot/dash substitution errors introduced by channel
+    noise.  It operates on Morse symbols only — do NOT pass AES ciphertext
+    or plain text.
+
+    Returns:
+        original_morse:     The input as received.
+        corrected_morse:    Model output (may equal input if no change).
+        was_corrected:      True when output differs from input.
+        correction_enabled: Whether the ML model was active.
+        elapsed_ms:         Inference time in milliseconds.
+        error:              Null on success; error string on failure.
+        note:               Reminder that model output is probabilistic.
+    """
+    if not req.morse:
+        raise HTTPException(400, "morse field cannot be empty")
+
+    if _ml_corrector is None:
+        raise HTTPException(
+            503,
+            "MorseCorrector failed to initialise at startup. "
+            "Check logs for details.",
+        )
+
+    # Safety: reject payloads that look like AES ciphertext
+    if ":" in req.morse:
+        raise HTTPException(
+            400,
+            "Input appears to contain AES ciphertext (contains ':'). "
+            "Decrypt first, then pass the Morse string to this endpoint.",
+        )
+
+    try:
+        result = _ml_corrector.correct(req.morse)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+    return {
+        "original_morse":     result.original_morse,
+        "corrected_morse":    result.corrected_morse,
+        "was_corrected":      result.was_corrected,
+        "correction_enabled": result.correction_enabled,
+        "elapsed_ms":         round(result.elapsed_ms, 1),
+        "error":              result.error,
+        "note": (
+            "The V2 model makes probabilistic predictions. "
+            "Corrected output may still contain errors."
+        ),
+    }
+
+
+@app.get("/api/ml/correction-status")
+def ml_correction_status():
+    """Return the current status of the V2 ML Morse corrector."""
+    if _ml_corrector is None:
+        return {"available": False, "error": "MorseCorrector failed to initialise."}
+    return {"available": True, **_ml_corrector.status()}
+
+
+@app.post("/api/ml/correction-toggle")
+def ml_correction_toggle(req: MLCorrectionToggleRequest):
+    """
+    Enable or disable ML Morse correction at runtime.
+
+    This does not require a server restart.  The change takes effect
+    immediately for subsequent calls to /api/ml/correct-morse and for
+    the serial RX path.
+
+    Args:
+        enabled: true to enable, false to disable.
+    """
+    if _ml_corrector is None:
+        raise HTTPException(
+            503, "MorseCorrector not available – check startup logs."
+        )
+    if req.enabled:
+        _ml_corrector.enable()
+    else:
+        _ml_corrector.disable()
+    return {
+        "ok": True,
+        "enabled": req.enabled,
+        "message": f"ML Morse correction {'enabled' if req.enabled else 'disabled'}.",
     }
 
 

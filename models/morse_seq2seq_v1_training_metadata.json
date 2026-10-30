@@ -1,0 +1,62 @@
+{
+  "model_name": "LoRaShield Morse seq2seq V1 research candidate",
+  "model_file": "morse_seq2seq_v1_candidate.keras",
+  "spec_version": "morse-seq2seq-data-v1",
+  "token_vocabulary_ids": {
+    "<PAD>": 0,
+    "<UNK>": 1,
+    "<BOS>": 2,
+    "<EOS>": 3,
+    "<DOT>": 4,
+    "<DASH>": 5,
+    "<LETTER>": 6,
+    "<WORD>": 7
+  },
+  "maximum_sequence_tokens_including_bos_eos": 256,
+  "architecture": {
+    "encoder": "Bidirectional GRU (24 units per direction)",
+    "decoder": "Autoregressive GRU (48 units) with additive attention",
+    "embedding_dim": 16
+  },
+  "determinism_and_environment": {
+    "seed": 73192742,
+    "python_version": "3.13.1",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "numpy_version": "2.4.2",
+    "tensorflow_version": "2.21.0",
+    "deterministic_ops_enabled": true
+  },
+  "training_configuration": {
+    "seed": 73192742,
+    "epochs_requested": 20,
+    "best_epoch_by_validation_loss": 20,
+    "batch_size": 64,
+    "early_stopping_patience": 4,
+    "checkpoint_monitor": "val_loss",
+    "train_pair_count": 70000,
+    "validation_pair_count": 8400,
+    "padding_loss_mask": "target token ID 0 (PAD) contributes zero loss and zero sample weight",
+    "locked_test_used_for_training_or_checkpoint_selection": false,
+    "calibration_used_for_training_or_checkpoint_selection": false
+  },
+  "source_manifest": {
+    "file": "morse_seq2seq_v1_completed_manifest.json",
+    "partition_counts": {
+      "train": 5000,
+      "validation": 600,
+      "calibration": 500,
+      "locked_test": 1000
+    },
+    "partition_fingerprints_sha256": {
+      "train": "5deb1b988d87be88889c2e1bcb8ec51b0a3a807b42fd05d4d12b64731e7e81a0",
+      "validation": "79f7a6a5da9fe919b9577dc004e1819adba844d4eb813a26e0f3b08da16d632a",
+      "calibration": "b5d694cdfc9d60707d9333f3a544bcbe15164d48eaa10cc1a0aa737631506343",
+      "locked_test": "507336ee06acb388f4ddca191b7c85c52cf04b2c6c365fa7aada2fe34e9066c4"
+    }
+  },
+  "locked_test_evaluation": "not run by the training script",
+  "limitations": [
+    "Synthetic alphanumeric Morse only; results do not establish real radio-channel performance.",
+    "Variable-length output does not guarantee recovery of ambiguous symbol or boundary errors."
+  ]
+}

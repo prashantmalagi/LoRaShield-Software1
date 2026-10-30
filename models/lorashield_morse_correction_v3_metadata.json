@@ -1,0 +1,145 @@
+{
+  "model_name": "LoRaShield Morse Correction V3 candidate",
+  "created_utc": "2026-10-29T07:00:03.251387+00:00",
+  "model_file": "lorashield_morse_correction_v3.keras",
+  "sequence_length": 120,
+  "vocabulary": [
+    "<PAD>",
+    "<UNK>",
+    ".",
+    "-",
+    " "
+  ],
+  "token_ids": {
+    "<PAD>": 0,
+    "<UNK>": 1,
+    ".": 2,
+    "-": 3,
+    " ": 4
+  },
+  "padding_id": 0,
+  "input_format": "Fixed-length int32 character IDs for dot, dash, spaces; right padded",
+  "output_format": "Per-position softmax over V3 vocabulary",
+  "masking": "PAD id 0 has zero sample weight for loss and weighted token accuracy; embedding mask_zero=True",
+  "architecture": {
+    "embedding_dim": 32,
+    "bidirectional_gru_units_per_direction": 48,
+    "output": "Dense(5, softmax)"
+  },
+  "training": {
+    "seed": 48621,
+    "train_source_seed": 731941,
+    "validation_source_seed": 562813,
+    "evaluation_corpus_seed": 20261029,
+    "epochs_requested": 12,
+    "epochs_completed": 12,
+    "batch_size": 128,
+    "optimizer": "Adam(0.001)",
+    "loss": "SparseCategoricalCrossentropy with zero sample weights for PAD",
+    "noise_levels_percent": [
+      0,
+      5,
+      10,
+      15,
+      20
+    ],
+    "pairs_per_source": 5,
+    "clean_pairs_included": true,
+    "partition_source_message_counts": {
+      "train": 5000,
+      "validation": 600,
+      "test": 200
+    },
+    "pair_counts": {
+      "train": 25000,
+      "validation": 3000
+    },
+    "train_unique_message_count": 5000,
+    "validation_unique_message_count": 600,
+    "test_unique_message_count": 200,
+    "partition_overlap_checked": true
+  },
+  "synthetic_data_limitations": [
+    "Only alphanumeric A-Z and 0-9 messages encoded with the project's Morse mapping.",
+    "Noise consists of independent random dot/dash substitutions; no insertions, deletions, bursts, timing, or radio-channel effects.",
+    "Synthetic metrics do not establish performance on real LoRa traffic or realistic language distributions."
+  ],
+  "held_out_evaluation": {
+    "noise_0_percent": {
+      "messages": 200,
+      "baseline_boundary_edit_errors": 0,
+      "baseline_boundary_edit_rate": 0.0,
+      "candidate_boundary_edit_errors": 0,
+      "candidate_boundary_edit_rate": 0.0,
+      "baseline_dot_dash_edit_errors": 0,
+      "baseline_dot_dash_edit_rate": 0.0,
+      "candidate_dot_dash_edit_errors": 0,
+      "candidate_dot_dash_edit_rate": 0.0,
+      "improved": 0,
+      "unchanged": 200,
+      "worsened": 0
+    },
+    "noise_5_percent": {
+      "messages": 200,
+      "baseline_boundary_edit_errors": 206,
+      "baseline_boundary_edit_rate": 0.042092357989374746,
+      "candidate_boundary_edit_errors": 193,
+      "candidate_boundary_edit_rate": 0.03943604413567634,
+      "baseline_dot_dash_edit_errors": 202,
+      "baseline_dot_dash_edit_rate": 0.050474762618690654,
+      "candidate_dot_dash_edit_errors": 189,
+      "candidate_dot_dash_edit_rate": 0.0472263868065967,
+      "improved": 21,
+      "unchanged": 170,
+      "worsened": 9
+    },
+    "noise_10_percent": {
+      "messages": 200,
+      "baseline_boundary_edit_errors": 419,
+      "baseline_boundary_edit_rate": 0.08561503882304863,
+      "candidate_boundary_edit_errors": 411,
+      "candidate_boundary_edit_rate": 0.08398038414384962,
+      "baseline_dot_dash_edit_errors": 410,
+      "baseline_dot_dash_edit_rate": 0.1024487756121939,
+      "candidate_dot_dash_edit_errors": 402,
+      "candidate_dot_dash_edit_rate": 0.10044977511244378,
+      "improved": 17,
+      "unchanged": 173,
+      "worsened": 10
+    },
+    "noise_15_percent": {
+      "messages": 200,
+      "baseline_boundary_edit_errors": 594,
+      "baseline_boundary_edit_rate": 0.12137310993052718,
+      "candidate_boundary_edit_errors": 576,
+      "candidate_boundary_edit_rate": 0.11769513690232938,
+      "baseline_dot_dash_edit_errors": 579,
+      "baseline_dot_dash_edit_rate": 0.1446776611694153,
+      "candidate_dot_dash_edit_errors": 561,
+      "candidate_dot_dash_edit_rate": 0.1401799100449775,
+      "improved": 30,
+      "unchanged": 157,
+      "worsened": 13
+    },
+    "noise_20_percent": {
+      "messages": 200,
+      "baseline_boundary_edit_errors": 824,
+      "baseline_boundary_edit_rate": 0.16836943195749898,
+      "candidate_boundary_edit_errors": 820,
+      "candidate_boundary_edit_rate": 0.16755210461789946,
+      "baseline_dot_dash_edit_errors": 794,
+      "baseline_dot_dash_edit_rate": 0.1984007996001999,
+      "candidate_dot_dash_edit_errors": 777,
+      "candidate_dot_dash_edit_rate": 0.19415292353823088,
+      "improved": 32,
+      "unchanged": 139,
+      "worsened": 29
+    },
+    "clean_preservation": {
+      "messages": 200,
+      "exactly_preserved": 200,
+      "rate": 1.0
+    }
+  },
+  "smoke_run": false
+}

@@ -1,0 +1,28 @@
+{
+  "model_name": "LoRaShield Morse Correction V2",
+  "sequence_length": 120,
+  "morse_chars": [
+    "<PAD>",
+    "<UNK>",
+    ".",
+    "-",
+    " "
+  ],
+  "input_format": "Fixed-length integer-encoded Morse sequence",
+  "output_format": "Per-position probabilities over Morse symbols",
+  "padding_id": 0,
+  "noise_type_tested": "Random dot/dash substitution",
+  "synthetic_test_results": {
+    "noise_0_percent_ser": 0.01,
+    "noise_5_percent_ser": 0.165,
+    "noise_10_percent_ser": 0.332,
+    "noise_15_percent_ser": 0.532,
+    "noise_20_percent_ser": 0.744
+  },
+  "limitations": [
+    "Results are from synthetic Morse data",
+    "Fresh-message generalization needs improvement",
+    "Real LoRa hardware validation is pending",
+    "Insertion, deletion and burst errors not evaluated"
+  ]
+}

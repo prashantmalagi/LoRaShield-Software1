@@ -1,0 +1,218 @@
+{
+  "exclusion_audit": {
+    "measured": {
+      "per_corpus": {
+        "v3_and_legacy_train_eval_sources": {
+          "source_fingerprint_sha256": "138df67319c53610426e286de0911c5d1bcf155e7229209cb10bb20e2e92902c",
+          "source_rows": 5998,
+          "unique_message_count": 5998,
+          "unique_word_count": 5998
+        },
+        "v3_corruption_eval": {
+          "source_fingerprint_sha256": "69eb4b60e9b75a836b7c87265bae538bd858a1601a1bdf107a65995f7251f44e",
+          "source_rows": 100,
+          "unique_message_count": 100,
+          "unique_word_count": 252
+        },
+        "v3_independent_eval": {
+          "source_fingerprint_sha256": "6d5d32f4fcb2cdf95246beae09018682c7d9fb88a35793acac0f080b51ff8642",
+          "source_rows": 500,
+          "unique_message_count": 500,
+          "unique_word_count": 500
+        },
+        "v3_selective_calibration": {
+          "source_fingerprint_sha256": "efd1df011ba0ca71d2eee9fc8053ad42096a546cc0a7636727d8d9e86f9ec8ab",
+          "source_rows": 300,
+          "unique_message_count": 300,
+          "unique_word_count": 752
+        },
+        "v3_selective_locked_test": {
+          "source_fingerprint_sha256": "0987a31dcdd512a73080f04919fc2653165de4b0b3c8cf347c82025a0837204e",
+          "source_rows": 300,
+          "unique_message_count": 300,
+          "unique_word_count": 748
+        },
+        "v3_synthetic_eval": {
+          "source_fingerprint_sha256": "caf801cb4fe85d5ba83d7375cbe1c635267f3c3c7b663a41434621bf9179fcdb",
+          "source_rows": 200,
+          "unique_message_count": 200,
+          "unique_word_count": 491
+        }
+      },
+      "source_rows_across_corpora": 7398,
+      "unique_message_count": 7398,
+      "unique_word_count": 8739
+    },
+    "source_corpus_definitions": [
+      {
+        "counts": {
+          "smoke_test": 24,
+          "smoke_train": 40,
+          "smoke_validation": 12,
+          "train": 5000,
+          "v2_eval": 200,
+          "v3_test": 200,
+          "validation": 600
+        },
+        "name": "V3 train/validation/test and legacy V2 sources",
+        "seeds": [
+          731941,
+          562813,
+          20261029,
+          999
+        ]
+      },
+      {
+        "counts": {
+          "source_messages": 200
+        },
+        "name": "V3 synthetic evaluator",
+        "seeds": [
+          8631052
+        ]
+      },
+      {
+        "counts": {
+          "source_messages": 500
+        },
+        "name": "V3 independent evaluator",
+        "seeds": [
+          20261029141537
+        ]
+      },
+      {
+        "counts": {
+          "source_messages": 100
+        },
+        "name": "V3 corruption evaluator",
+        "seeds": [
+          2748193
+        ]
+      },
+      {
+        "counts": {
+          "calibration_sources": 300,
+          "locked_test_sources": 300
+        },
+        "name": "V3 selective calibration and locked test",
+        "seeds": [
+          4819207
+        ]
+      }
+    ]
+  },
+  "partition_audit": {
+    "measurement_scope": "exactly the supplied source partitions; no corruption variants or model evaluation are implied",
+    "overlap_check": {
+      "method": "uppercase canonical complete-message equality plus exact constituent-word set intersection; apply across exclusions and every assigned partition",
+      "results": {
+        "complete_message_overlap_count": 0,
+        "complete_message_overlaps": [],
+        "cross_partition_message_collision_count": 0,
+        "cross_partition_word_collision_count": 0,
+        "partition_message_collisions": [],
+        "partition_word_collisions": [],
+        "word_overlap_count": 0,
+        "word_overlaps": []
+      }
+    },
+    "source_counts": {
+      "calibration": 500,
+      "locked_test": 1000,
+      "train": 5000,
+      "validation": 600
+    },
+    "source_fingerprints_sha256": {
+      "calibration": "b5d694cdfc9d60707d9333f3a544bcbe15164d48eaa10cc1a0aa737631506343",
+      "locked_test": "507336ee06acb388f4ddca191b7c85c52cf04b2c6c365fa7aada2fe34e9066c4",
+      "train": "5deb1b988d87be88889c2e1bcb8ec51b0a3a807b42fd05d4d12b64731e7e81a0",
+      "validation": "79f7a6a5da9fe919b9577dc004e1819adba844d4eb813a26e0f3b08da16d632a"
+    }
+  },
+  "planned_settings": {
+    "corruption_settings": {
+      "burst_substitution": "2-3 contiguous dot/dash flips within one letter group",
+      "kinds": [
+        "clean",
+        "dot_dash_substitution_05",
+        "dot_dash_substitution_10",
+        "dot_dash_substitution_15",
+        "dot_dash_substitution_20",
+        "symbol_insertion",
+        "symbol_deletion",
+        "burst_substitution",
+        "letter_boundary_insertion",
+        "letter_boundary_deletion",
+        "letter_boundary_shift",
+        "word_boundary_insertion",
+        "word_boundary_deletion",
+        "word_boundary_shift"
+      ],
+      "letter_boundary": [
+        "insert",
+        "delete",
+        "shift by one symbol"
+      ],
+      "pair_rng": "random.Random(pair_seed); pair_seed = corpus_seed + partition_index*1000003 + source_index*10007 + corruption_index*1009",
+      "pair_rule": "corrupted received Morse is input; canonical source Morse is target",
+      "source_rng": "random.Random(root_seed + partition_seed_offsets[partition])",
+      "substitution_percentages": [
+        5,
+        10,
+        15,
+        20
+      ],
+      "symbol_deletion": "one dot/dash removed only when the letter group remains nonempty",
+      "symbol_insertion": "one dot or dash inserted within one Morse letter group",
+      "word_boundary": [
+        "insert",
+        "delete",
+        "shift by one whole letter group"
+      ]
+    },
+    "maximum_sequence_tokens_including_bos_eos": 256,
+    "partition_seed_offsets": {
+      "calibration": 202,
+      "locked_test": 303,
+      "train": 11,
+      "validation": 101
+    },
+    "planned_partition_source_counts": {
+      "calibration": 500,
+      "locked_test": 1000,
+      "train": 5000,
+      "validation": 600
+    },
+    "root_seed": 73192741,
+    "token_vocabulary_ids": {
+      "<BOS>": 2,
+      "<DASH>": 5,
+      "<DOT>": 4,
+      "<EOS>": 3,
+      "<LETTER>": 6,
+      "<PAD>": 0,
+      "<UNK>": 1,
+      "<WORD>": 7
+    }
+  },
+  "reproducibility_policy": {
+    "fingerprints_are_measured_only": true,
+    "regenerate_ledgers_when": [
+      "source seeds change",
+      "generator logic changes",
+      "corpus sizes change"
+    ]
+  },
+  "runtime_contract": {
+    "preprocessor_parameters": [
+      "received_morse",
+      "max_tokens"
+    ],
+    "reference_labels_available_at_runtime": false,
+    "runtime_input_fields": [
+      "received_morse",
+      "input_ids"
+    ]
+  },
+  "spec_version": "morse-seq2seq-data-v1"
+}
